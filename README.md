@@ -1,16 +1,25 @@
 # weather_app
 
-A new Flutter project.
+- Domain-Driven Design
+- Dependcy injection
+- Auto-generated (Servcies, Models)
+- Unit Testing
 
-## Getting Started
+## App demo
 
-This project is a starting point for a Flutter application.
+![](app.gif)
 
-A few resources to get you started if this is your first Flutter project:
+## Dependency
+- flutter_svg: ^0.22.0
+- flutter_bloc: ^7.3.0
+- equatable: ^2.0.3
+- location: ^4.2.0
+- geolocator: ^7.6.2
+- geocoding: ^2.0.1
+- injectable: ^1.5.0
+- retrofit: ^2.0.1
+- json_annotation: ^4.1.0
+- intl: ^0.17.0
+- pull_to_refresh: ^2.0.0
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

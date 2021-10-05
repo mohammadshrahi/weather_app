@@ -1,10 +1,7 @@
 part of 'location_bloc.dart';
 
-abstract class LocationState extends Equatable {
+abstract class LocationState {
   const LocationState();
-
-  @override
-  List<Object> get props => [];
 }
 
 class LocationInitState extends LocationState {}

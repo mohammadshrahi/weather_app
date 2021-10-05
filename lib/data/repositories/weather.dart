@@ -17,7 +17,9 @@ class WeatherRepositoryImpl implements WeatherRepository {
   Future<Resource> getRegions(double? late, double? long) async {
     // HttpResponse<List<RegionItem>> response =
     //     await service.getRegions('$late,$long');
-    return HttpResponseHandler().handle(service.getRegions('$late,$long'));
+
+    return HttpResponseHandler<List<Region>>()
+        .handle(service.getRegions('$late,$long'));
   }
 
   @override

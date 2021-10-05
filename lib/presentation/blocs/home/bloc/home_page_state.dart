@@ -1,10 +1,7 @@
 part of 'home_page_bloc.dart';
 
-abstract class HomePageState extends Equatable {
+abstract class HomePageState {
   const HomePageState();
-
-  @override
-  List<Object> get props => [];
 }
 
 class HomePageLoadingState extends HomePageState {}
@@ -18,6 +15,4 @@ class HomePageSuccessState extends HomePageState {
   List<WeatherItem> weatherList;
   WeatherItem weatherItem;
   HomePageSuccessState(this.weatherItem, this.weatherList);
-  @override
-  List<Object> get props => [weatherItem, ...weatherList];
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:weather_app/core/resource/resource.dart';
 import 'package:weather_app/core/utils.dart';
@@ -48,6 +49,9 @@ class _HomePageState extends State<HomePage> {
           if (BlocProvider.of<LocationBloc>(context).state
               is LocationSuccessState) {
             getWeatherData();
+          } else if (BlocProvider.of<LocationBloc>(context).state
+              is! LocationSuccessState) {
+            BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
           } else {
             _refreshController.refreshCompleted();
           }
@@ -69,6 +73,13 @@ class _HomePageState extends State<HomePage> {
       listener: (context, state) {
         if (state is LocationSuccessState) {
           getWeatherData();
+        }
+        if (state is LocationFailedState) {
+          if (state.failedResource.data is LocationPermission) {
+            if (state.failedResource.data == LocationPermission.deniedForever) {
+              _openAppSetting();
+            }
+          }
         }
       },
       child: BlocBuilder<LocationBloc, LocationState>(
@@ -262,6 +273,24 @@ class _HomePageState extends State<HomePage> {
             .successResource
             .data
             .woeid!));
+  }
+
+  void _openAppSetting() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Text(
+                'Location access is required to fetch location weather! Please change location access permission from the app settings'),
+            actions: [
+              TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                  },
+                  child: Text('Ok')),
+            ],
+          );
+        });
   }
 }
 
