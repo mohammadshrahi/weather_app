@@ -1,13 +1,7 @@
 part of 'location_bloc.dart';
 
-abstract class LocationEvent extends Equatable {
+abstract class LocationEvent {
   const LocationEvent();
-
-  @override
-  List<Object> get props => [];
 }
 
-class LocationGetEvent extends LocationEvent {
-  @override
-  List<Object> get props => super.props;
-}
+class LocationGetEvent extends LocationEvent {}

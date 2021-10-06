@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:weather_app/resources/resources.dart';
 
 class AppConst {
+  static const kSupportedLocals = [Locale('en')];
   static const String kApiEndPoint = 'https://www.metaweather.com/api';
   static const String kAssetsEndPoint =
       'https://www.metaweather.com/static/img/weather/';

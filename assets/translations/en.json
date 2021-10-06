@@ -1,0 +1,20 @@
+{
+    "common":{
+        "somthing_wrong":"Somthing Went Wrong!Please try again",
+        "allow_access":"Allow Location Access",
+        "ok":"ok"
+
+    },
+    "home":{
+        "settings":"Settings",
+        "humadity":"Humadity",
+        "pressure":"Pressure",
+        "wind":"Wind",
+        "location_access_message":"Location access is required to fetch location weather! Please change location access permission from the app settings"
+
+    },
+    "settings":{
+        "kalvin":"Kalvin",
+        "celsius":"Celsius"
+    }
+}

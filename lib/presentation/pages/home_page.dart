@@ -4,16 +4,19 @@ import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:weather_app/core/resource/resource.dart';
+import 'package:weather_app/core/routes/routes.dart';
 import 'package:weather_app/core/utils.dart';
 import 'package:weather_app/domain/entities/weather_item.dart';
 import 'package:weather_app/presentation/blocs/home/bloc/home_page_bloc.dart';
 import 'package:weather_app/presentation/blocs/location/bloc/location_bloc.dart';
+import 'package:weather_app/presentation/blocs/settings/bloc/settings_bloc.dart';
 import 'package:weather_app/presentation/widgets/app_loading_widget.dart';
 import 'package:weather_app/presentation/widgets/degree_text.dart';
 import 'package:weather_app/presentation/widgets/horizontal_space.dart';
 import 'package:weather_app/presentation/widgets/retry_widget.dart';
 import 'package:weather_app/presentation/widgets/vertical_space.dart';
 import 'package:weather_app/resources/resources.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key? key}) : super(key: key);
@@ -25,9 +28,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   static const double kVerticalSpace = 20;
   String bgImage = Gifs.cloudBlueG;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey(); // Create a key
+
   @override
   void didChangeDependencies() {
-    BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
+    BlocProvider.of<SettingsBloc>(context).getSettingState();
     super.didChangeDependencies();
   }
 
@@ -43,29 +48,78 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+          key: _scaffoldKey,
+          drawer: _buildDrawer(),
           body: SmartRefresher(
-        controller: _refreshController,
-        onRefresh: () {
-          if (BlocProvider.of<LocationBloc>(context).state
-              is LocationSuccessState) {
-            getWeatherData();
-          } else if (BlocProvider.of<LocationBloc>(context).state
-              is! LocationSuccessState) {
-            BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
-          } else {
-            _refreshController.refreshCompleted();
-          }
-        },
-        child: Container(
-          decoration: BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage(bgImage), fit: BoxFit.fill)),
-          padding: EdgeInsets.all(16),
-          // color: Colors.blue,
-          child: _buildLocationWidget(),
-        ),
-      )),
+            controller: _refreshController,
+            onRefresh: () {
+              if (BlocProvider.of<LocationBloc>(context).state
+                  is LocationSuccessState) {
+                getWeatherData();
+              } else if (BlocProvider.of<LocationBloc>(context).state
+                  is! LocationSuccessState) {
+                BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
+              } else {
+                _refreshController.refreshCompleted();
+              }
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage(bgImage), fit: BoxFit.fill)),
+              padding: EdgeInsets.all(16),
+              child: _buildSettingBloc(),
+            ),
+          )),
     );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      // Add a ListView to the drawer. This ensures the user can scroll
+      // through the options in the drawer if there isn't enough vertical
+      // space to fit everything.
+      child: ListView(
+        // Important: Remove any padding from the ListView.
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
+            child: Text('Wearher App'),
+          ),
+          ListTile(
+            title: Text(
+              'home.settings'.tr(),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyText1
+                  ?.copyWith(color: AppConst.kAppPrimaryColor),
+            ),
+            onTap: () {
+              Navigator.pushNamed(context, Routes.kSettingPageRoute);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingBloc() {
+    return BlocListener<SettingsBloc, SettingsState>(
+        listener: (context, state) {
+      if (state is SettingsSuccessState) {
+        BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
+      }
+    }, child:
+            BlocBuilder<SettingsBloc, SettingsState>(builder: (context, state) {
+      if (state is SettingsInitial) {
+        return const AppLoadingWidget();
+      }
+
+      return _buildLocationWidget();
+    }));
   }
 
   Widget _buildLocationWidget() {
@@ -91,14 +145,14 @@ class _HomePageState extends State<HomePage> {
             return AppLoadingWidget();
           } else if (state is LocationInitState) {
             return RetryWidget(
-              'Allow Location Access',
+              'home.allow_access'.tr(),
               onPressed: () {
                 BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
               },
             );
           } else {
             return RetryWidget(
-              'Something went Wrong!please try again',
+              'common.somthing_wrong'.tr(),
               onPressed: () {
                 BlocProvider.of<LocationBloc>(context).add(LocationGetEvent());
               },
@@ -128,7 +182,7 @@ class _HomePageState extends State<HomePage> {
             return _buildWearherWidget(state.weatherList, state.weatherItem);
           } else if (state is HomePageFailedState) {
             return RetryWidget(
-              'Something went wrong!please try again',
+              'common.somthing_wrong'.tr(),
               onPressed: () {
                 getWeatherData();
               },
@@ -144,7 +198,24 @@ class _HomePageState extends State<HomePage> {
   Column _buildWearherWidget(List<WeatherItem> list, WeatherItem selectedItem) {
     return Column(
       children: [
-        Expanded(child: Container(child: _detailsItem(selectedItem))),
+        Expanded(
+            child: Stack(
+          children: [
+            Container(child: _detailsItem(selectedItem)),
+            InkWell(
+              onTap: () {
+                _scaffoldKey.currentState?.openDrawer();
+              },
+              child: const Align(
+                alignment: Alignment.topLeft,
+                child: Icon(
+                  Icons.menu,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        )),
         Container(
           height: 120,
           child: ListView.builder(
@@ -174,52 +245,54 @@ class _HomePageState extends State<HomePage> {
       mainAxisSize: MainAxisSize.max,
       children: [
         Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    (BlocProvider.of<LocationBloc>(context).state
-                                as LocationSuccessState)
-                            .successResource
-                            .data
-                            .title ??
-                        '',
-                    style: Theme.of(context).textTheme.headline2,
-                  ),
-                  const VerticalSpace(kVerticalSpace),
-                  Row(
-                    children: [
-                      Text(
-                        weatherItem.weatherStateName ?? '',
-                        style: Theme.of(context).textTheme.bodyText2,
-                      ),
-                      HorizontalSpace(3),
-                      SvgPicture.network(
-                          Utils.getAssetsLink(weatherItem.weatherStateAbbr!))
-                    ],
-                  ),
-                  DegreeText(
-                    weatherItem.getTemp(),
-                    style: Theme.of(context)
-                        .textTheme
-                        .headline2
-                        ?.copyWith(fontSize: 100),
-                    degreeSize: 20,
-                  ),
-                  Text(
-                    AppDateUtils.fromYYYYMMdd(weatherItem.applicableDate!)
-                        .getDayOfTheWeek(),
-                    style: Theme.of(context).textTheme.bodyText2,
-                  ),
-                ],
-              ),
-            ],
-          ),
+          child: _buildDetailsItemFocusedData(weatherItem),
         ),
         _buildSelectedDayDetails(weatherItem)
+      ],
+    );
+  }
+
+  Row _buildDetailsItemFocusedData(WeatherItem weatherItem) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              (BlocProvider.of<LocationBloc>(context).state
+                          as LocationSuccessState)
+                      .successResource
+                      .data
+                      .title ??
+                  '',
+              style: Theme.of(context).textTheme.headline2,
+            ),
+            const VerticalSpace(kVerticalSpace),
+            Row(
+              children: [
+                Text(
+                  weatherItem.weatherStateName ?? '',
+                  style: Theme.of(context).textTheme.bodyText2,
+                ),
+                HorizontalSpace(3),
+                SvgPicture.network(
+                    Utils.getAssetsLink(weatherItem.weatherStateAbbr!))
+              ],
+            ),
+            TemperatureWidget(
+              weatherItem.getTemp(),
+              style:
+                  Theme.of(context).textTheme.headline2?.copyWith(fontSize: 90),
+              degreeSize: 20,
+            ),
+            Text(
+              AppDateUtils.fromYYYYMMdd(weatherItem.applicableDate!)
+                  .getDayOfTheWeek(),
+              style: Theme.of(context).textTheme.bodyText2,
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -230,17 +303,17 @@ class _HomePageState extends State<HomePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Humadity ${weatherItem.humidity!.round()}%',
+            '${'home.humadity'.tr()} ${weatherItem.humidity!.round()}%',
             style: Theme.of(context).textTheme.headline3,
           ),
           const VerticalSpace(kVerticalSpace),
           Text(
-            'Pressure ${weatherItem.airPressure!.round()}',
+            '${'home.pressure'.tr()} ${weatherItem.airPressure!.round()}',
             style: Theme.of(context).textTheme.headline3,
           ),
           const VerticalSpace(kVerticalSpace),
           Text(
-            'Wind ${weatherItem.windSpeed!.round()} K/H',
+            '${'home.wind'.tr()} ${weatherItem.windSpeed!.round()} K/H',
             style: Theme.of(context).textTheme.headline3,
           ),
           const VerticalSpace(
@@ -280,14 +353,13 @@ class _HomePageState extends State<HomePage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            content: Text(
-                'Location access is required to fetch location weather! Please change location access permission from the app settings'),
+            content: Text('home.location_access_message'.tr()),
             actions: [
               TextButton(
                   onPressed: () async {
                     Navigator.pop(context);
                   },
-                  child: Text('Ok')),
+                  child: Text('commont.ok'.tr())),
             ],
           );
         });
@@ -327,7 +399,7 @@ class WeatherItemWidget extends StatelessWidget {
             VerticalSpace(10),
             Row(
               children: [
-                DegreeText(
+                TemperatureWidget(
                   weatherItem.getMaxTemp(),
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
@@ -337,7 +409,7 @@ class WeatherItemWidget extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyText1,
                 ),
                 HorizontalSpace(2),
-                DegreeText(
+                TemperatureWidget(
                   weatherItem.getMinTemp(),
                   style: Theme.of(context).textTheme.bodyText1,
                 )
