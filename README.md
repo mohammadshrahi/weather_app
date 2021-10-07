@@ -4,7 +4,8 @@
 - Dependcy injection
 - Auto-generated (Servcies, Models)
 - Unit Testing
-
+- Setting page (temperature units)
+- portrait/landscape
 ## App demo
 
 ![](app.gif)
