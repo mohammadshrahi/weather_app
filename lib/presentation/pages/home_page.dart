@@ -245,14 +245,18 @@ class _HomePageState extends State<HomePage> {
       mainAxisSize: MainAxisSize.max,
       children: [
         Expanded(
-          child: _buildDetailsItemFocusedData(weatherItem),
+          child: LayoutBuilder(
+            builder: (context, con) {
+              return _buildDetailsItemFocusedData(weatherItem, con.maxHeight);
+            },
+          ),
         ),
         _buildSelectedDayDetails(weatherItem)
       ],
     );
   }
 
-  Row _buildDetailsItemFocusedData(WeatherItem weatherItem) {
+  Row _buildDetailsItemFocusedData(WeatherItem weatherItem, double maxHeight) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -282,8 +286,10 @@ class _HomePageState extends State<HomePage> {
             ),
             TemperatureWidget(
               weatherItem.getTemp(),
-              style:
-                  Theme.of(context).textTheme.headline2?.copyWith(fontSize: 90),
+              style: Theme.of(context)
+                  .textTheme
+                  .headline2
+                  ?.copyWith(fontSize: maxHeight * 0.4),
               degreeSize: 20,
             ),
             Text(
